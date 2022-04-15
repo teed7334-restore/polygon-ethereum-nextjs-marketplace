@@ -17,9 +17,11 @@ export default function CreatorDashboard() {
   }, [])
   async function loadNFTs() {
     const web3Modal = new Web3Modal({
-      network: 'mainnet',
-      cacheProvider: true,
+      network: 'testnet',
+      cacheProvider: false,
+      disableInjectedProvider: false,
     })
+    await web3Modal.clearCachedProvider()
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
     const signer = provider.getSigner()
@@ -36,7 +38,7 @@ export default function CreatorDashboard() {
         tokenId: i.tokenId.toNumber(),
         seller: i.seller,
         owner: i.owner,
-        image: meta.data.image,
+        image: tokenUri,
       }
       return item
     }))

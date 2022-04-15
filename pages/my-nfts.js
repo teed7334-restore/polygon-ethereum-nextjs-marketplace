@@ -19,7 +19,7 @@ export default function MyAssets() {
   }, [])
   async function loadNFTs() {
     const web3Modal = new Web3Modal({
-      network: "mainnet",
+      network: "testnet",
       cacheProvider: true,
     })
     const connection = await web3Modal.connect()
@@ -38,7 +38,7 @@ export default function MyAssets() {
         tokenId: i.tokenId.toNumber(),
         seller: i.seller,
         owner: i.owner,
-        image: meta.data.image,
+        image: tokenURI,
         tokenURI
       }
       return item

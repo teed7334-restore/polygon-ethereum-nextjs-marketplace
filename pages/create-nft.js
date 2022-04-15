@@ -4,7 +4,7 @@ import { create as ipfsHttpClient } from 'ipfs-http-client'
 import { useRouter } from 'next/router'
 import Web3Modal from 'web3modal'
 
-const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
+const client = ipfsHttpClient('http://10.1.0.8:5001/api/v0')
 
 import {
   marketplaceAddress
@@ -17,16 +17,26 @@ export default function CreateItem() {
   const [formInput, updateFormInput] = useState({ price: '', name: '', description: '' })
   const router = useRouter()
 
+  
+
   async function onChange(e) {
-    const file = e.target.files[0]
+    const peers = await client.version()
+    console.log('peers: ', peers)
+    const reader = new FileReader()
+    const image = document.querySelector('input[name="Asset"]').files
+    const file = reader.readAsDataURL(e.target.files[0])
+    console.log('file: ', file)
     try {
-      const added = await client.add(
-        file,
-        {
-          progress: (prog) => console.log(`received: ${prog}`)
-        }
-      )
-      const url = `https://ipfs.infura.io/ipfs/${added.path}`
+      // const added = await client.add(
+      //   file,
+      //   {
+      //     progress: (prog) => console.log(`received: ${prog}`)
+      //   }
+      // )
+      const added = {
+        path: 'QmPX1JHvkg8uvfsiHZMoB6ApkXdGPwjqY6HYd2fsMHy3fy'
+      }
+      const url = `https://ipfs.io/ipfs/${added.path}`
       setFileUrl(url)
     } catch (error) {
       console.log('Error uploading file: ', error)
@@ -34,14 +44,18 @@ export default function CreateItem() {
   }
   async function uploadToIPFS() {
     const { name, description, price } = formInput
-    if (!name || !description || !price || !fileUrl) return
+    // if (!name || !description || !price || !fileUrl) return
+    if (!name || !description || !price) return
     /* first, upload to IPFS */
-    const data = JSON.stringify({
-      name, description, image: fileUrl
-    })
+    // const data = JSON.stringify({
+    //   name, description, image: fileUrl
+    // })
     try {
-      const added = await client.add(data)
-      const url = `https://ipfs.infura.io/ipfs/${added.path}`
+      // const added = await client.add(data)
+      const added = {
+        path: 'QmPX1JHvkg8uvfsiHZMoB6ApkXdGPwjqY6HYd2fsMHy3fy'
+      }
+      const url = `https://ipfs.io/ipfs/${added.path}`
       /* after file is uploaded to IPFS, return the URL to use it in the transaction */
       return url
     } catch (error) {
@@ -50,17 +64,25 @@ export default function CreateItem() {
   }
 
   async function listNFTForSale() {
-    const url = await uploadToIPFS()
+    // const url = await uploadToIPFS()
+    const added = {
+      path: 'QmPX1JHvkg8uvfsiHZMoB6ApkXdGPwjqY6HYd2fsMHy3fy'
+    }
+    const url = `https://ipfs.io/ipfs/${added.path}`
     const web3Modal = new Web3Modal()
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
     const signer = provider.getSigner()
 
     /* next, create the item */
-    const price = ethers.utils.parseUnits(formInput.price, 'ether')
+    
+    const price = ethers.utils.parseUnits('0.1', 'ether')
     let contract = new ethers.Contract(marketplaceAddress, NFTMarketplace.abi, signer)
     let listingPrice = await contract.getListingPrice()
     listingPrice = listingPrice.toString()
+    console.log('url: ', url)
+    console.log('price: ', price)
+    console.log('listingPrice: ', listingPrice)
     let transaction = await contract.createToken(url, price, { value: listingPrice })
     await transaction.wait()
    

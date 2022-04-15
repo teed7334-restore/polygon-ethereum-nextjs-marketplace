@@ -17,26 +17,33 @@ export default function Home() {
   }, [])
   async function loadNFTs() {
     /* create a generic provider and query for unsold market items */
-    const provider = new ethers.providers.JsonRpcProvider()
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
     const contract = new ethers.Contract(marketplaceAddress, NFTMarketplace.abi, provider)
     const data = await contract.fetchMarketItems()
+    console.log('data: ', data)
 
     /*
     *  map over items returned from smart contract and format 
     *  them as well as fetch their token metadata
     */
     const items = await Promise.all(data.map(async i => {
+      console.log('tokenId: ', i.tokenId)
       const tokenUri = await contract.tokenURI(i.tokenId)
+      console.log('tokenUri', tokenUri)
       const meta = await axios.get(tokenUri)
+      console.log('meta', meta)
       let price = ethers.utils.formatUnits(i.price.toString(), 'ether')
       let item = {
         price,
         tokenId: i.tokenId.toNumber(),
         seller: i.seller,
         owner: i.owner,
-        image: meta.data.image,
-        name: meta.data.name,
-        description: meta.data.description,
+        // image: meta.data.image,
+        image: tokenUri,
+        name: 'Honorary Bored Ape #22',
+        description: `Created by 
+        BoredApeYachtClub
+        Honorary members of the Bored Ape Yacht Club. ☠️🐵⛵️`,
       }
       return item
     }))
